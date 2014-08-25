@@ -2,6 +2,7 @@ package com.pycitup.pyc;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -32,6 +34,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     protected Cursor cursor;
     protected int columnIndex;
+    protected int imageIdColumnIndex;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -83,7 +86,10 @@ public class PhotoGalleryFragment extends Fragment {
 
         // == Fetching from content provider ==
 
-        String[] projection = { MediaStore.Images.Thumbnails._ID };
+        String[] projection = {
+                MediaStore.Images.Thumbnails._ID,
+                MediaStore.Images.Thumbnails.IMAGE_ID
+        };
         cursor = getActivity().getContentResolver().query(
                 MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
                 projection,
@@ -92,6 +98,7 @@ public class PhotoGalleryFragment extends Fragment {
                 MediaStore.Images.Thumbnails.IMAGE_ID + " DESC"
         );
         columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Thumbnails._ID);
+        imageIdColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Thumbnails.IMAGE_ID);
 
         //cursor.moveToFirst();
         //String imagePath = cursor.getString(columnIndex);
@@ -100,6 +107,41 @@ public class PhotoGalleryFragment extends Fragment {
         // Create a gridview and set an adapter for it
         GridView gridView = (GridView) getActivity().findViewById(R.id.gridview);
         gridView.setAdapter( new ImageAdapter(getActivity()) );
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                cursor.moveToPosition(position);
+                int mediaImageID = cursor.getInt(imageIdColumnIndex);
+                String[] selectionArgs = { ""+mediaImageID };
+
+                // Get the data location of the image
+                String[] projection = { MediaStore.Images.Media.DATA };
+                Cursor mainImageCursor = getActivity().getContentResolver().query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection, // Which columns to return
+                    MediaStore.Images.Media._ID + " = ?",       // Return all rows
+                    selectionArgs,
+                    null
+                );
+
+                mainImageCursor.moveToFirst();
+                int columnIndex = mainImageCursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                // Get image filename
+                String imagePath = mainImageCursor.getString(columnIndex);
+                //Toast.makeText(getActivity(), imagePath, Toast.LENGTH_SHORT).show();
+
+                // Full screen display
+                File file = new File(imagePath);
+                Uri path = Uri.fromFile(file);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                // So in order to manage all type of file, I replace "image/*" by "*/*"
+                intent.setDataAndType(path, "image/*");
+                startActivity(intent);
+            }
+        });
     }
 
     public class ImageAdapter extends BaseAdapter {
@@ -204,6 +246,11 @@ public class PhotoGalleryFragment extends Fragment {
             imageView.setImageBitmap(bm);
             return imageView;*/
         }
+
+
+        /*
+         * These methods are to scale down the image
+         */
 
         private Bitmap decodeSampledBitmapFromUri(String path, int reqW, int reqH) {
             Bitmap bm = null;

@@ -59,7 +59,7 @@ public class PhotoGalleryFragment extends Fragment {
         // Mobile: same as emulator - although can't find the paths in android file explorer
         //
         // Note: In the file explorer (for emulator) the actual path is `/mnt/shell/emulated/0/Pictures`
-        String mediaStorageDir = Environment
+        /*String mediaStorageDir = Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
                 .getAbsolutePath();
 
@@ -81,7 +81,7 @@ public class PhotoGalleryFragment extends Fragment {
         for (File file : files) {
             // Log.d(TAG, file.getAbsolutePath());
             //imageAdapter.add(file.getAbsolutePath());
-        }
+        }*/
 
 
         // == Fetching from content provider ==

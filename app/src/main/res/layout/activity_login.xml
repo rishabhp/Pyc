@@ -15,7 +15,8 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:hint="First Name" />
+        android:hint="First Name"
+        android:inputType="textCapWords" />
 
     <EditText
         android:layout_width="match_parent"
@@ -24,7 +25,8 @@
         android:layout_below="@+id/firstName"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:hint="Last Name" />
+        android:hint="Last Name"
+        android:inputType="textCapWords" />
 
     <Spinner
         android:layout_width="match_parent"
@@ -54,6 +56,7 @@
         android:hint="1"
         android:layout_below="@+id/country"
         android:layout_toRightOf="@+id/plusSign"
+        android:inputType="number"
         />
 
     <EditText
@@ -64,7 +67,8 @@
         android:layout_below="@+id/country"
         android:layout_alignRight="@+id/country"
         android:layout_alignEnd="@+id/country"
-        android:layout_toRightOf="@+id/countryCode" />
+        android:layout_toRightOf="@+id/countryCode"
+        android:inputType="phone" />
 
     <Button
         android:layout_width="match_parent"

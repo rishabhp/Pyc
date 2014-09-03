@@ -3,7 +3,9 @@ package com.pycitup.pyc;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +13,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
 import com.parse.FindCallback;
@@ -49,16 +52,29 @@ public class LoginActivity extends Activity {
 
         countryView.setAdapter(adapter);
 
+
         loginButtonView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final ParseUser user = new ParseUser();
 
-                final String phoneNumber = phoneNumberView.getText().toString();
-                String firstName = firstNameView.getText().toString();
-                String lastName = lastNameView.getText().toString();
-                String countryCode = countryCodeView.getText().toString();
-                String country = countryView.getSelectedItem().toString();
+                final String phoneNumber = phoneNumberView.getText().toString().trim();
+                String firstName = firstNameView.getText().toString().trim();
+                String lastName = lastNameView.getText().toString().trim();
+                String countryCode = countryCodeView.getText().toString().trim();
+                String country = countryView.getSelectedItem().toString().trim();
+
+                if (phoneNumber.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || countryCode.isEmpty() || country.isEmpty()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                    builder.setMessage("Please make sure you entered all the fields correctly.")
+                            .setTitle("Oops!")
+                            .setPositiveButton(android.R.string.ok, null);
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    return;
+                }
+
+                final ParseUser user = new ParseUser();
 
                 user.setUsername(phoneNumber);
                 user.setPassword("Fake Password");

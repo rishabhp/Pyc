@@ -15,6 +15,9 @@ import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -22,6 +25,8 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.File;
@@ -36,9 +41,15 @@ public class PhotoGalleryFragment extends Fragment {
     protected int columnIndex;
     protected int imageIdColumnIndex;
 
+    private boolean mSelectionMode = false;
+
+    private Menu mMenu;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
+
+        setHasOptionsMenu(true);
 
         return rootView;
     }
@@ -105,12 +116,35 @@ public class PhotoGalleryFragment extends Fragment {
         //Log.d(TAG, imagePath);
 
         // Create a gridview and set an adapter for it
-        GridView gridView = (GridView) getActivity().findViewById(R.id.gridview);
-        gridView.setAdapter( new ImageAdapter(getActivity()) );
+        final GridView gridView = (GridView) getActivity().findViewById(R.id.gridview);
+        ImageAdapter adapter = new ImageAdapter(getActivity());
+        gridView.setAdapter(adapter);
+        gridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                // Toast.makeText(getActivity(), ""+gridView.getCheckedItemCount(), Toast.LENGTH_SHORT).show();
+
+                if (mSelectionMode) {
+                    if (gridView.isItemChecked(position)) {
+                        gridView.setItemChecked(position, true);
+                    }
+                    else {
+                        gridView.setItemChecked(position, false);
+                    }
+
+                    if (gridView.getCheckedItemCount() < 1) {
+                        mSelectionMode = false;
+                        mMenu.getItem(0).setVisible(false);
+                    }
+
+                    return;
+                }
+                else {
+                    gridView.setItemChecked(position, false);
+                }
 
                 cursor.moveToPosition(position);
                 int mediaImageID = cursor.getInt(imageIdColumnIndex);
@@ -142,6 +176,28 @@ public class PhotoGalleryFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
+        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                mSelectionMode = true;
+                mMenu.getItem(0).setVisible(true);
+
+                gridView.setItemChecked(position, true);
+
+                // Toast.makeText(getActivity(), ""+gridView.getCheckedItemCount(), Toast.LENGTH_SHORT).show();
+
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        mMenu = menu;
+
+        //inflater.inflate(R.menu.main, menu);
+        //super.onCreateOptionsMenu(menu, inflater);
     }
 
     public class ImageAdapter extends BaseAdapter {
@@ -197,25 +253,38 @@ public class PhotoGalleryFragment extends Fragment {
             imageID = cursor.getInt(columnIndex);
 
             if (convertView == null) {
-                imageView = new ImageView(mContext);
-
-                imageView.setLayoutParams(new GridView.LayoutParams(wPixel, hPixel));
-
-                // Set the content of the image based on the provided URI
-                imageView.setImageURI(Uri.withAppendedPath(
-                        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setPadding(8, 8, 8, 8);
-                imageView.setCropToPadding(true);
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.photo_item, null);
             }
             else {
-                imageView = (ImageView) convertView;
+                // imageView = (ImageView) convertView;
             }
 
+            imageView = (ImageView) convertView.findViewById(R.id.photo);
+
+            imageView.setLayoutParams(new RelativeLayout.LayoutParams(wPixel, hPixel));
+
+            // Set the content of the image based on the provided URI
             imageView.setImageURI(Uri.withAppendedPath(
                     MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID));
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setPadding(8, 8, 8, 8);
+            imageView.setCropToPadding(true);
 
-            return imageView;
+            //imageView.setImageURI(Uri.withAppendedPath(
+            //        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID));
+
+            // Show checkmark
+            GridView gridView = (GridView) parent;
+            ImageView checkmarkView = (ImageView) convertView.findViewById(R.id.checkmark);
+            if (gridView.isItemChecked(position)) {
+                checkmarkView.setVisibility(View.VISIBLE);
+            }
+            else {
+                checkmarkView.setVisibility(View.INVISIBLE);
+            }
+
+            //return imageView;
+            return convertView;
 
 
 

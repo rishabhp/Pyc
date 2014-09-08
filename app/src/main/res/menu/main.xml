@@ -2,10 +2,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity" >
 
+    <item android:id="@+id/action_send_photos"
+        android:title="Send"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:visible="false"
+        />
     <item android:id="@+id/action_contacts"
         android:title="Contacts"
         android:orderInCategory="100"
-        android:showAsAction="always" />
+        android:showAsAction="never" />
     <item android:id="@+id/action_login"
         android:title="Login"
         android:orderInCategory="100"

@@ -49,10 +49,11 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Get current user
         ParseUser currentUser = ParseUser.getCurrentUser();
 
         if (currentUser == null) {
-            // Show login screen
+            // It's an anonymous user, hence show the login screen
             navigateToLogin();
         }
         else {
@@ -101,7 +102,11 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     }
 
     private void navigateToLogin() {
+        // Launch the login activity
+
         Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
     }
 

@@ -1,6 +1,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.pycitup.pyc.ContactsActivity" >
+
+    <item android:id="@+id/search"
+        android:title="Search"
+        android:showAsAction="collapseActionView|ifRoom"
+        android:actionViewClass="android.widget.SearchView" />
+
+    <item android:id="@+id/share"
+        android:title="Share"
+        android:showAsAction="always"
+        android:visible="false"/>
+
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:orderInCategory="100"

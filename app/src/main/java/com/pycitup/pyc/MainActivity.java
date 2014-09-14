@@ -129,6 +129,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                 return true;
             case R.id.action_contacts:
                 intent = new Intent(this, ContactsActivity.class);
+                // intent = new Intent(this, SearchResultsActivity.class);
                 startActivity(intent);
                 break;
             case R.id.action_login:

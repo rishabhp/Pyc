@@ -45,6 +45,9 @@ public class PhotoGalleryFragment extends Fragment {
 
     private Menu mMenu;
 
+    private ImageAdapter mAdapter;
+    private GridView mGridView;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
@@ -108,42 +111,42 @@ public class PhotoGalleryFragment extends Fragment {
                 null,
                 MediaStore.Images.Thumbnails.IMAGE_ID + " DESC"
         );
-        columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Thumbnails._ID);
-        imageIdColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Thumbnails.IMAGE_ID);
+        columnIndex = cursor.getColumnIndexOrThrow(projection[0]);
+        imageIdColumnIndex = cursor.getColumnIndexOrThrow(projection[1]);
 
         //cursor.moveToFirst();
         //String imagePath = cursor.getString(columnIndex);
         //Log.d(TAG, imagePath);
 
         // Create a gridview and set an adapter for it
-        final GridView gridView = (GridView) getActivity().findViewById(R.id.gridview);
-        ImageAdapter adapter = new ImageAdapter(getActivity());
-        gridView.setAdapter(adapter);
-        gridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
+        mGridView = (GridView) getActivity().findViewById(R.id.gridview);
+        mAdapter = new ImageAdapter(getActivity());
+        mGridView.setAdapter(mAdapter);
+        mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE);
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 // Toast.makeText(getActivity(), ""+gridView.getCheckedItemCount(), Toast.LENGTH_SHORT).show();
 
                 if (mSelectionMode) {
-                    if (gridView.isItemChecked(position)) {
-                        gridView.setItemChecked(position, true);
+                    if (mGridView.isItemChecked(position)) {
+                        mGridView.setItemChecked(position, true);
                     }
                     else {
-                        gridView.setItemChecked(position, false);
+                        mGridView.setItemChecked(position, false);
                     }
 
-                    if (gridView.getCheckedItemCount() < 1) {
+                    if (mGridView.getCheckedItemCount() < 1) {
                         mSelectionMode = false;
-                        mMenu.getItem(0).setVisible(false);
+                        mMenu.findItem(R.id.action_send_photos).setVisible(false);
                     }
 
                     return;
                 }
                 else {
-                    gridView.setItemChecked(position, false);
+                    mGridView.setItemChecked(position, false);
                 }
 
                 cursor.moveToPosition(position);
@@ -177,13 +180,13 @@ public class PhotoGalleryFragment extends Fragment {
             }
         });
 
-        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 mSelectionMode = true;
-                mMenu.getItem(0).setVisible(true);
+                mMenu.findItem(R.id.action_send_photos).setVisible(true);
 
-                gridView.setItemChecked(position, true);
+                mGridView.setItemChecked(position, true);
 
                 // Toast.makeText(getActivity(), ""+gridView.getCheckedItemCount(), Toast.LENGTH_SHORT).show();
 
@@ -198,6 +201,22 @@ public class PhotoGalleryFragment extends Fragment {
 
         //inflater.inflate(R.menu.main, menu);
         //super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_send_photos) {
+            Intent intent = new Intent(getActivity(), ContactsActivity.class);
+
+            // Need to send the selected photo data too the activity too
+            // mGridView.getCheckedItemPositions();
+
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     public class ImageAdapter extends BaseAdapter {

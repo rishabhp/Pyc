@@ -9,5 +9,6 @@
     <string name="title_activity_section_list_example">SectionListExample</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_signup">SignupActivity</string>
+    <string name="title_activity_search_results">SearchResultsActivity</string>
 
 </resources>

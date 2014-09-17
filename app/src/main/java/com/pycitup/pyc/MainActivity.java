@@ -11,8 +11,10 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.UserDictionary;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -26,13 +28,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.parse.Parse;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 
@@ -99,6 +105,71 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                     .setTabListener(this);
             actionBar.addTab(tab);
         }
+
+
+        // Upload images on parse
+
+        //byte[] data = "Working at Parse is great".getBytes();
+        int imageID = 1002;
+        Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID);
+        byte[] data = new byte[0];
+        try {
+            data = getBytes(uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final ParseFile file = new ParseFile("resume.png", data);
+        file.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(com.parse.ParseException e) {
+                if (e == null) {
+                    // success
+
+                    final ParseObject conversation = new ParseObject("Conversation");
+                    conversation.put("name", "Test Conversation");
+                    conversation.put("userID", ParseUser.getCurrentUser().getObjectId());
+
+                    conversation.saveInBackground(new SaveCallback() {
+                        @Override
+                        public void done(com.parse.ParseException e) {
+                            if (e == null) {
+                                String objectID = conversation.getObjectId();
+
+                                ParseObject conversationFiles = new ParseObject("ConversationFiles");
+                                conversationFiles.put("conversationID", objectID);
+                                conversationFiles.put("file", file);
+
+                                conversationFiles.saveInBackground(new SaveCallback() {
+                                    @Override
+                                    public void done(com.parse.ParseException e) {
+
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+                }
+                else {
+                    // error
+                }
+            }
+        });
+    }
+
+    private byte[] getBytes(Uri uri) throws IOException {
+        InputStream inputStream = getContentResolver().openInputStream(uri);
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+
+        int bufferSize = 1024*1024;
+        byte[] buffer = new byte[bufferSize];
+
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+
+        return byteBuffer.toByteArray();
     }
 
     private void navigateToLogin() {

@@ -449,7 +449,11 @@ public class ContactsActivity extends Activity {
         else if (id == R.id.share) {
             // We have the absolute position data from which we can get contacts
 
-            //
+            // We need images data too that needs to be shared
+            ArrayList<Integer> imageIDs = getIntent().getExtras().getIntegerArrayList("imageIDs");
+            for (int i : imageIDs) {
+                // System.out.println("intent: " + i);
+            }
         }
 
         return super.onOptionsItemSelected(item);

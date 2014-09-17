@@ -14,6 +14,7 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,7 +38,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     public String TAG = PhotoGalleryFragment.class.getSimpleName();
 
-    protected Cursor cursor;
+    protected Cursor mCursor;
     protected int columnIndex;
     protected int imageIdColumnIndex;
 
@@ -104,15 +105,15 @@ public class PhotoGalleryFragment extends Fragment {
                 MediaStore.Images.Thumbnails._ID,
                 MediaStore.Images.Thumbnails.IMAGE_ID
         };
-        cursor = getActivity().getContentResolver().query(
+        mCursor = getActivity().getContentResolver().query(
                 MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
                 projection,
                 null,
                 null,
                 MediaStore.Images.Thumbnails.IMAGE_ID + " DESC"
         );
-        columnIndex = cursor.getColumnIndexOrThrow(projection[0]);
-        imageIdColumnIndex = cursor.getColumnIndexOrThrow(projection[1]);
+        columnIndex = mCursor.getColumnIndexOrThrow(projection[0]);
+        imageIdColumnIndex = mCursor.getColumnIndexOrThrow(projection[1]);
 
         //cursor.moveToFirst();
         //String imagePath = cursor.getString(columnIndex);
@@ -149,8 +150,8 @@ public class PhotoGalleryFragment extends Fragment {
                     mGridView.setItemChecked(position, false);
                 }
 
-                cursor.moveToPosition(position);
-                int mediaImageID = cursor.getInt(imageIdColumnIndex);
+                mCursor.moveToPosition(position);
+                int mediaImageID = mCursor.getInt(imageIdColumnIndex);
                 String[] selectionArgs = { ""+mediaImageID };
 
                 // Get the data location of the image
@@ -210,8 +211,27 @@ public class PhotoGalleryFragment extends Fragment {
         if (id == R.id.action_send_photos) {
             Intent intent = new Intent(getActivity(), ContactsActivity.class);
 
-            // Need to send the selected photo data too the activity too
-            // mGridView.getCheckedItemPositions();
+            ArrayList<Integer> imageIDs = new ArrayList<Integer>();
+
+            // Need to send the selected photo data to the activity too
+            SparseBooleanArray checked = mGridView.getCheckedItemPositions();
+            for (int i = 0; i < checked.size(); i++) {
+                if (checked.valueAt(i)) {
+                    int key = checked.keyAt(i);
+
+                    // move to the appropriate cursor position
+                    mCursor.moveToPosition(key);
+
+                    // Get the image ID
+                    // right now it'll get thumbnail ID, let's test with that
+                    // first later we'll replace with real image ID
+                    int imageID = mCursor.getInt(columnIndex);
+                    imageIDs.add(imageID);
+                }
+            }
+
+            // Attach the data to intent
+            intent.putExtra("imageIDs", imageIDs);
 
             startActivity(intent);
         }
@@ -234,7 +254,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return cursor.getCount();
+            return mCursor.getCount();
             //return itemList.size();
         }
 
@@ -267,9 +287,9 @@ public class PhotoGalleryFragment extends Fragment {
             int hPixel = dpToPx(120);
 
             // Move cursor to current position
-            cursor.moveToPosition(position);
+            mCursor.moveToPosition(position);
             // Get the current value for the requested column
-            imageID = cursor.getInt(columnIndex);
+            imageID = mCursor.getInt(columnIndex);
 
             if (convertView == null) {
                 convertView = LayoutInflater.from(mContext).inflate(R.layout.photo_item, null);

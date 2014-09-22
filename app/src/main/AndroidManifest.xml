@@ -27,8 +27,7 @@
         <activity
             android:name=".ContactsActivity"
             android:label="@string/title_activity_contacts"
-            android:launchMode="singleTop">
-
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
@@ -43,8 +42,11 @@
         </activity>
         <activity
             android:name=".SearchResultsActivity"
-            android:label="@string/title_activity_search_results">
-
+            android:label="@string/title_activity_search_results" >
+        </activity>
+        <activity
+            android:name=".ConversationsActivity"
+            android:label="@string/title_activity_conversations" >
         </activity>
     </application>
 

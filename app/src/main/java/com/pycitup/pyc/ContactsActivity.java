@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -29,8 +31,20 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.parse.FindCallback;
+import com.parse.GetCallback;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
+import com.parse.SaveCallback;
+import com.parse.ParseException;
+
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -44,6 +58,8 @@ public class ContactsActivity extends Activity {
     ArrayList<Contact> mContacts;
 
     Menu mMenu;
+
+    private long[] mCheckedItemIds;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,8 +199,6 @@ public class ContactsActivity extends Activity {
         private static final int ITEM_VIEW_TYPE_COUNT = 2;
 
         ContactsFilter mContactsFilter;
-
-        private long[] mCheckedItemIds;
 
         public CustomAdapter(Context context, ArrayList list) {
             mContext = context;
@@ -437,6 +451,10 @@ public class ContactsActivity extends Activity {
         return true;
     }
 
+
+    // Keep a track of images uploaded;
+    int mImagesUploaded = 0;
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -447,16 +465,156 @@ public class ContactsActivity extends Activity {
             return true;
         }
         else if (id == R.id.share) {
-            // We have the absolute position data from which we can get contacts
+            mImagesUploaded = 0;
 
-            // We need images data too that needs to be shared
-            ArrayList<Integer> imageIDs = getIntent().getExtras().getIntegerArrayList("imageIDs");
-            for (int i : imageIDs) {
-                // System.out.println("intent: " + i);
-            }
+            // Create a conversation
+            final ParseObject conversation = new ParseObject("Conversation");
+            conversation.put("name", "Test Title");
+            conversation.put("userID", ParseUser.getCurrentUser().getObjectId());
+
+            // Save the conversation
+            conversation.saveInBackground(new SaveCallback() {
+                @Override
+                public void done(ParseException e) {
+                    if (e == null) {
+                        // Get the conversation ID that can be
+                        // used to refer to in ConversationFiles
+                        String objectID = conversation.getObjectId();
+
+                        // == Get the Image IDs selected and upload them to Parse ==
+                        ArrayList<Integer> imageIDs = getIntent().getExtras().getIntegerArrayList("imageIDs");
+                        for (int imageID : imageIDs) {
+                            // System.out.println("intent: " + i);
+
+                            uploadImage(imageID, objectID);
+                        }
+
+                        // == Get the Contacts selected and save them as recipients on Parse ==
+                        // We have the absolute position data from which we can get contacts
+
+                        for (long i : mCheckedItemIds) {
+                            Contact contact = mContacts.get((int) i);
+                            uploadRecipient(contact, objectID);
+                        }
+                    }
+                }
+            });
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    // Upload images on parse
+    private void uploadImage(int imageID, final String objectID) {
+
+        Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID);
+
+        // Get image byte data in array
+        byte[] data = new byte[0];
+
+        try {
+            data = getBytes(uri);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String fileName = imageID + ".png";
+
+        // Create a ParseFile object
+        final ParseFile file = new ParseFile(fileName, data);
+
+        // Save in Background
+        file.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                // Increment images uploaded counter
+                mImagesUploaded++;
+
+                // Create ConversationFiles
+                ParseObject conversationFile = new ParseObject("ConversationFiles");
+                conversationFile.put("conversationID", objectID);
+                conversationFile.put("file", file);
+
+                // Save ConversationFiles (files with reference to conversation)
+                conversationFile.saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        // Upload done for ConversationFiles
+                    }
+                });
+            }
+        });
+    }
+
+    // Upload recipients data to parse
+    private void uploadRecipient(Contact contact, final String objectID) {
+        String phoneNumber = contact.mNumber;
+        final String contactName = contact.mName;
+
+        // Check if the recipient exists in our app or not
+        // We'll check the last 10 digits/chars against our DB
+        // TODO: find a robust solution
+
+        // Remove all whitespaces and get the last 10 characters in the string
+        phoneNumber = phoneNumber.replaceAll("\\s+","");
+        phoneNumber = phoneNumber.substring(phoneNumber.length() - 10);
+        
+        if (phoneNumber.length() != 10) return;
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("User");
+        query.whereEqualTo("username", phoneNumber);
+
+        // System.out.println(contact.mNumber + " " + phoneNumber);
+
+        final String finalPhoneNumber = phoneNumber;
+        query.getFirstInBackground(new GetCallback<ParseObject>() {
+            @Override
+            public void done(ParseObject parseObject, ParseException e) {
+
+                ParseObject conversationRecipient = new ParseObject("ConversationRecipients");
+                conversationRecipient.put("conversationID", objectID);
+
+                if (parseObject != null) {
+                    conversationRecipient.put("userID", parseObject.getObjectId());
+                    // conversationRecipient.put("phoneNumber", null);
+                }
+                else {
+                    // conversationRecipient.put("userID", null);
+                    conversationRecipient.put("phoneNumber", finalPhoneNumber);
+                }
+
+                // Let's save the contact name against each record
+                // for now. We might want to do something with it later
+                // like show that name in conversations or use the max
+                // used to show to people who don't have the contact saved
+                // in conversations. You never know! :)
+                conversationRecipient.put("contactName", contactName);
+
+                conversationRecipient.saveInBackground();
+            }
+        });
+
+        return;
+    }
+
+    private byte[] getBytes(Uri uri) throws IOException {
+        // Input stream
+        InputStream inputStream = getContentResolver().openInputStream(uri);
+        // Output stream
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+
+        int bufferSize = 1024*1024; // buffer size 1mb
+        byte[] buffer = new byte[bufferSize];
+
+        // read from input stream and write to output
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+
+        // return array representation of contents of this stream
+        return byteBuffer.toByteArray();
     }
 
 }

@@ -51,28 +51,40 @@ public class ConversationsActivity extends Activity {
         // which this user is tagged as a recipient
         // sorted by date
 
+        // Filter ConversationRecipients by userId which will be
+        // the current user's objectId
         ParseQuery<ParseObject> conversationRecipientsQuery = ParseQuery.getQuery("ConversationRecipients");
         conversationRecipientsQuery.whereEqualTo(
                 "userId",
                 ParseObject.createWithoutData("_User", ParseUser.getCurrentUser().getObjectId())
         );
 
+        // Include data from Conversation class (conversationId is a Pointer)
         conversationRecipientsQuery.include("conversationId");
 
+        // Fire the query to get data
         conversationRecipientsQuery.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> parseObjects, ParseException e) {
+                // List of conversation titles
                 ArrayList<String> conversationTitles = new ArrayList<String>();
+
+                // Loop
                 for (ParseObject conversationRecipient : parseObjects) {
+                    // Get the Conversation data attached to the
+                    // ConversationRecipient row
                     ParseObject conversation = conversationRecipient.getParseObject("conversationId");
+                    // Add the Conversation title to the list
                     conversationTitles.add(conversation.getString("name"));
                 }
 
+                // Array adapter
                 ArrayAdapter<String> mAdapter = new ArrayAdapter<String>(
                         ConversationsActivity.this,
                         android.R.layout.simple_list_item_1,
                         conversationTitles
                 );
+                // Get the listview and attach the adapter to it
                 mListView = (ListView) findViewById(R.id.listView);
                 mListView.setAdapter(mAdapter);
             }

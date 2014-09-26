@@ -133,6 +133,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         switch (id) {
             case R.id.action_settings:
                 return true;
+            case R.id.action_conversations:
+                intent = new Intent(this, ConversationsActivity.class);
+                startActivity(intent);
+                break;
             case R.id.action_contacts:
                 intent = new Intent(this, ContactsActivity.class);
                 // intent = new Intent(this, SearchResultsActivity.class);

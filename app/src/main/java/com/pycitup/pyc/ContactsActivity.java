@@ -33,6 +33,7 @@ import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.GetCallback;
+import com.parse.Parse;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -41,6 +42,7 @@ import com.parse.SaveCallback;
 import com.parse.ParseException;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -390,7 +392,7 @@ public class ContactsActivity extends Activity {
                     results.count = mContacts.size();
                 }
                 else {
-                    // Some search copnstraint has been passed
+                    // Some search constraint has been passed
                     // so let's filter accordingly
                     ArrayList<Contact> filteredContacts = new ArrayList<Contact>();
 
@@ -470,7 +472,11 @@ public class ContactsActivity extends Activity {
             // Create a conversation
             final ParseObject conversation = new ParseObject("Conversation");
             conversation.put("name", "Test Title");
-            conversation.put("userID", ParseUser.getCurrentUser().getObjectId());
+            // User Relation
+            conversation.put(
+                    "userId",
+                    ParseObject.createWithoutData("_User", ParseUser.getCurrentUser().getObjectId())
+            );
 
             // Save the conversation
             conversation.saveInBackground(new SaveCallback() {
@@ -486,15 +492,29 @@ public class ContactsActivity extends Activity {
                         for (int imageID : imageIDs) {
                             // System.out.println("intent: " + i);
 
-                            uploadImage(imageID, objectID);
+                            uploadImage(imageID, conversation);
                         }
 
                         // == Get the Contacts selected and save them as recipients on Parse ==
                         // We have the absolute position data from which we can get contacts
 
+                        // First save the sender as a recipient
+                        ParseUser currentUser = ParseUser.getCurrentUser();
+                        // Phone Number
+                        String phoneNumber = currentUser.getUsername();
+                        // Figure out the Full Name
+                        String firstName = currentUser.getString("firstName");
+                        String lastName = currentUser.getString("lastName");
+                        String fullName = firstName + " " + lastName;
+                        Contact currentUserContact = new Contact(fullName, phoneNumber, false);
+
+                        // Save the sender as recipient
+                        uploadRecipient(currentUserContact, conversation);
+
+                        // Save all the selected recipients now
                         for (long i : mCheckedItemIds) {
                             Contact contact = mContacts.get((int) i);
-                            uploadRecipient(contact, objectID);
+                            uploadRecipient(contact, conversation);
                         }
                     }
                 }
@@ -505,7 +525,7 @@ public class ContactsActivity extends Activity {
     }
 
     // Upload images on parse
-    private void uploadImage(int imageID, final String objectID) {
+    private void uploadImage(int imageID, final ParseObject conversation) {
 
         Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID);
 
@@ -533,7 +553,11 @@ public class ContactsActivity extends Activity {
 
                 // Create ConversationFiles
                 ParseObject conversationFile = new ParseObject("ConversationFiles");
-                conversationFile.put("conversationID", objectID);
+                // Conversation Relation
+                conversationFile.put(
+                        "conversationId",
+                        ParseObject.createWithoutData("Conversation", conversation.getObjectId())
+                );
                 conversationFile.put("file", file);
 
                 // Save ConversationFiles (files with reference to conversation)
@@ -548,7 +572,7 @@ public class ContactsActivity extends Activity {
     }
 
     // Upload recipients data to parse
-    private void uploadRecipient(Contact contact, final String objectID) {
+    private void uploadRecipient(Contact contact, final ParseObject conversation) {
         String phoneNumber = contact.mNumber;
         final String contactName = contact.mName;
 
@@ -559,13 +583,11 @@ public class ContactsActivity extends Activity {
         // Remove all whitespaces and get the last 10 characters in the string
         phoneNumber = phoneNumber.replaceAll("\\s+","");
         phoneNumber = phoneNumber.substring(phoneNumber.length() - 10);
-        
+
         if (phoneNumber.length() != 10) return;
 
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("User");
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("_User");
         query.whereEqualTo("username", phoneNumber);
-
-        // System.out.println(contact.mNumber + " " + phoneNumber);
 
         final String finalPhoneNumber = phoneNumber;
         query.getFirstInBackground(new GetCallback<ParseObject>() {
@@ -573,14 +595,21 @@ public class ContactsActivity extends Activity {
             public void done(ParseObject parseObject, ParseException e) {
 
                 ParseObject conversationRecipient = new ParseObject("ConversationRecipients");
-                conversationRecipient.put("conversationID", objectID);
+
+                // Conversation Relation
+                conversationRecipient.put(
+                        "conversationId",
+                        ParseObject.createWithoutData("Conversation", conversation.getObjectId())
+                );
 
                 if (parseObject != null) {
-                    conversationRecipient.put("userID", parseObject.getObjectId());
-                    // conversationRecipient.put("phoneNumber", null);
+                    // User Relation
+                    conversationRecipient.put(
+                            "userId",
+                            ParseObject.createWithoutData("_User", parseObject.getObjectId())
+                    );
                 }
                 else {
-                    // conversationRecipient.put("userID", null);
                     conversationRecipient.put("phoneNumber", finalPhoneNumber);
                 }
 

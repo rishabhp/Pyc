@@ -8,6 +8,10 @@
         android:showAsAction="always"
         android:visible="false"
         />
+    <item android:id="@+id/action_conversations"
+        android:title="Conversations"
+        android:orderInCategory="100"
+        android:showAsAction="never" />
     <item android:id="@+id/action_contacts"
         android:title="Contacts"
         android:orderInCategory="100"

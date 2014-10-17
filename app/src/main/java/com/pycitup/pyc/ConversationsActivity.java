@@ -121,6 +121,8 @@ public class ConversationsActivity extends Activity {
             public void onPageSelected(int position) {
                 String objectId = mResourceIds.get(position);
                 mCurrentFileId = objectId;
+
+                getChatMessages();
             }
         });
 
@@ -166,6 +168,7 @@ public class ConversationsActivity extends Activity {
     }
 
     public void getChatMessages() {
+        mChatMessages.clear();
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatMessage");
         // where conversation ID is this

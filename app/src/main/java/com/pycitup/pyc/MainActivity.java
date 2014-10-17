@@ -37,8 +37,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             Log.i(TAG, currentUser.getUsername());
         }
 
-        startActivity( new Intent(this, ConversationsListActivity.class) );
-        finish();
+        //startActivity( new Intent(this, ConversationsListActivity.class) );
+        //finish();
 
 
         // Setup the action bar for tabs

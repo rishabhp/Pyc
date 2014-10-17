@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -51,6 +52,8 @@ public class ConversationsActivity extends Activity {
     ArrayList<ParseObject> mChatMessages = new ArrayList<ParseObject>();
     CustomAdapter mChatLogAdapter;
 
+    Handler mHandler = new Handler();
+
     LayoutInflater mLayoutInflator;
 
     @Override
@@ -75,12 +78,18 @@ public class ConversationsActivity extends Activity {
         conversationFiles.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> parseObjects, ParseException e) {
+                int i = 0;
                 for (ParseObject conversationFile : parseObjects) {
+
+                    final int k = i;
 
                     // Cache object IDs of files
                     mResourceIds.add(conversationFile.getObjectId());
+
                     if (mCurrentFileId == null)
-                        mCurrentFileId = mResourceIds.get(0);
+                        mCurrentFileId = mResourceIds.get(k);
+
+                    mResources.add(null); // add empty placeholder
 
                     ParseFile file = (ParseFile) conversationFile.get("file");
                     file.getDataInBackground(new GetDataCallback() {
@@ -98,17 +107,25 @@ public class ConversationsActivity extends Activity {
                                 // ViewGroup layout = (ViewGroup) findViewById(android.R.id.content);
                                 // Add the ImageView to the Layout
                                 //mViewPager.addView(imageView);
-                                mResources.add(bmp);
+                                mResources.set(k, bmp);
 
                                 // notify the pager adapter that the
                                 // underlying data set has changed
-                                mViewPager.getAdapter().notifyDataSetChanged();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mViewPager.getAdapter().notifyDataSetChanged();
+                                    }
+                                });
+                                //mViewPager.getAdapter().notifyDataSetChanged();
                             }
                             else {
 
                             }
                         }
                     });
+
+                    ++i;
                 }
 
                 // Fetch all chat messages
@@ -165,10 +182,24 @@ public class ConversationsActivity extends Activity {
         // getChatMessages();
 
         mLayoutInflator = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        mHandler.postDelayed(runnable, 5000);
     }
 
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            getChatMessages();
+            mHandler.postDelayed(this, 5000);
+        }
+    };
+
     public void getChatMessages() {
-        mChatMessages.clear();
+        // TODO:
+        // Optimization so that when someone types
+        // and sends message then
+
+        //mChatMessages.clear();
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatMessage");
         // where conversation ID is this
@@ -179,11 +210,20 @@ public class ConversationsActivity extends Activity {
             @Override
             public void done(List<ParseObject> parseObjects, ParseException e) {
                 // Log.d(TAG, String.valueOf(parseObjects.size()));
+                final ArrayList<ParseObject> chatMessages = new ArrayList<ParseObject>();
+
                 for (ParseObject chatMessage : parseObjects) {
-                    mChatMessages.add(chatMessage);
+                    chatMessages.add(chatMessage);
                 }
 
-                mChatLogAdapter.notifyDataSetChanged();
+                runOnUiThread(new Runnable(){
+                    public void run() {
+                        mChatMessages.clear();
+                        mChatMessages.addAll(chatMessages);
+                        mChatLogAdapter.notifyDataSetChanged();
+                    }
+                });
+                //mChatLogAdapter.notifyDataSetChanged();
             }
         });
     }

@@ -45,8 +45,16 @@
             android:label="@string/title_activity_search_results" >
         </activity>
         <activity
+            android:name=".ConversationsListActivity"
+            android:label="@string/title_activity_conversations_list" >
+        </activity>
+        <activity
             android:name=".ConversationsActivity"
             android:label="@string/title_activity_conversations" >
+        </activity>
+        <activity
+            android:name=".GestureActivity"
+            android:label="@string/title_activity_gesture" >
         </activity>
     </application>
 

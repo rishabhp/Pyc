@@ -3,7 +3,10 @@ package com.pycitup.pyc;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
+import android.support.v13.app.FragmentStatePagerAdapter;
+import android.util.Log;
 
 /**
  * Created by rishabhpugalia on 20/08/14.
@@ -25,6 +28,8 @@ public class HomePagerAdapter extends FragmentPagerAdapter {
     // and it does not exists.
     public Fragment getItem(int position) {
 
+        Log.d(HomePagerAdapter.class.getSimpleName(), String.valueOf(position));
+
         switch (position) {
             case 0:
                 return new ActivityFeedFragment();
@@ -41,5 +46,4 @@ public class HomePagerAdapter extends FragmentPagerAdapter {
     public int getCount() {
         return 3;
     }
-
 }

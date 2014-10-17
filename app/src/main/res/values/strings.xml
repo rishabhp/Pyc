@@ -10,6 +10,8 @@
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_signup">SignupActivity</string>
     <string name="title_activity_search_results">SearchResultsActivity</string>
+    <string name="title_activity_conversations_list">ConversationsListActivity</string>
     <string name="title_activity_conversations">ConversationsActivity</string>
+    <string name="title_activity_gesture">GestureActivity</string>
 
 </resources>

@@ -1,11 +1,60 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true">
 
-    <ListView
+    <RelativeLayout
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/listView" />
-</LinearLayout>
+        android:layout_height="match_parent"
+        tools:context="com.pycitup.pyc.Conversations">
+
+
+        <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/pager"
+            android:layout_width="wrap_content"
+            android:layout_height="400dp"
+            android:layout_marginBottom="10dp" />
+
+        <ListView
+            android:id="@+id/chatLog"
+            android:transcriptMode="alwaysScroll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pager" />
+
+        <RelativeLayout
+            android:id="@+id/chatBox"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:background="#ffffff"
+            android:paddingTop="5dp"
+            android:paddingBottom="10dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/chatLog">
+            <EditText
+                android:id="@+id/chatMessage"
+                android:layout_toLeftOf="@+id/chatSend"
+                android:layout_alignBottom="@+id/chatSend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter your message..."
+                android:inputType="textShortMessage"
+                android:imeOptions="actionSend"/>
+            <Button
+                android:id="@+id/chatSend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="10dp"
+                android:layout_alignParentRight="true"
+                android:text="Send"
+                android:textSize="18sp" >
+            </Button>
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</ScrollView>

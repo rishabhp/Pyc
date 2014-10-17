@@ -13,6 +13,8 @@ import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;

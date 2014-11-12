@@ -9,8 +9,15 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
+import android.view.View;
+import android.widget.Button;
 import com.parse.ParseUser;
+import com.pubnub.api.Callback;
+import com.pubnub.api.Pubnub;
+import com.pubnub.api.PubnubException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
@@ -20,10 +27,53 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     HomePagerAdapter mHomePagerAdapter;
     ViewPager mViewPager;
 
+
+    public class User {
+        private int birthYear;
+        private String fullName;
+        public User() {}
+        public User(String fullName, int birthYear) {
+            this.fullName = fullName;
+            this.birthYear = birthYear;
+        }
+        public long getBirthYear() {
+            return birthYear;
+        }
+        public String getFullName() {
+            return fullName;
+        }
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        // == pubnub
+
+        Pubnub pubnub = new Pubnub(
+                "pub-c-dbf49973-307a-4b0d-852f-6f5f05446b5e",
+                "sub-c-43fccdc4-6636-11e4-90a5-02ee2ddab7fe",
+                "sec-c-NTlhMWUzMjktZTc2Yy00YzMzLTgzMzctNzlhODVkODJiY2Nh"
+        );
+
+        try {
+            pubnub.subscribe("hello_world", new Callback() {
+                @Override
+                public void successCallback(String channel, Object message) {
+                    System.out.println("SUBSCRIBE: " + channel + " : " + message.getClass() + " : " + message.toString());
+                }
+            });
+        } catch (PubnubException e) {
+            e.printStackTrace();
+        }
+
+
+        // == pubnub
+
+
 
         // Get current user
         ParseUser currentUser = ParseUser.getCurrentUser();
@@ -34,7 +84,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         }
         else {
             // The user is logged in, yay!!
-            Log.i(TAG, currentUser.getUsername());
+            // Log.i(TAG, currentUser.getUsername());
         }
 
         //startActivity( new Intent(this, ConversationsListActivity.class) );

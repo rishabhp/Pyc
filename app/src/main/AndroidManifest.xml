@@ -56,6 +56,16 @@
             android:name=".GestureActivity"
             android:label="@string/title_activity_gesture" >
         </activity>
+
+        <provider
+            android:name=".TestProvider"
+            android:authorities="com.pycitup.pyc.TestProvider"
+            android:multiprocess="true" />
+
+        <activity
+            android:name=".ListPreferencesActivity"
+            android:label="@string/title_activity_list_preferences" >
+        </activity>
     </application>
 
 </manifest>

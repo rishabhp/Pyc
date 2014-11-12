@@ -2,13 +2,15 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:id="@+id/scrollView">
 
     <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="com.pycitup.pyc.Conversations">
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/parentLayout">
 
 
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
@@ -17,16 +19,79 @@
             android:layout_height="400dp"
             android:layout_marginBottom="10dp" />
 
-        <ListView
-            android:id="@+id/chatLog"
-            android:transcriptMode="alwaysScroll"
+        <!--<RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/pager" />
+            android:id="@+id/content"
+            android:layout_below="@+id/pager">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text ..."
+                android:id="@+id/textView"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="46dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text"
+                android:id="@+id/textView1"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="46dp"
+                android:layout_below="@+id/textView"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text"
+                android:id="@+id/textView2"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="46dp"
+                android:layout_below="@+id/textView1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text"
+                android:id="@+id/textView3"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="46dp"
+                android:layout_below="@+id/textView2"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text"
+                android:id="@+id/textView4"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="46dp"
+                android:layout_below="@+id/textView3"/>
+
+            <ListView
+                android:id="@+id/chatLog"
+                android:transcriptMode="alwaysScroll"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:layout_below="@+id/textView4"
+                android:layout_marginBottom="50dp"
+                />
+
+        </RelativeLayout>-->
+
+
+        <ListView
+            android:id="@+id/chatLog"
+            android:stackFromBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_below="@+id/pager"
+            android:layout_marginBottom="60dp"
+            />
 
         <RelativeLayout
             android:id="@+id/chatBox"
-            android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
             android:background="#ffffff"
             android:paddingTop="5dp"
@@ -34,7 +99,7 @@
             android:paddingLeft="0dp"
             android:paddingRight="0dp"
             android:layout_height="wrap_content"
-            android:layout_below="@id/chatLog">
+            android:layout_alignParentBottom="true">
             <EditText
                 android:id="@+id/chatMessage"
                 android:layout_toLeftOf="@+id/chatSend"

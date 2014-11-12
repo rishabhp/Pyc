@@ -25,6 +25,8 @@ import java.util.List;
 
 public class LoginActivity extends Activity {
 
+    private String TAG = LoginActivity.class.getSimpleName();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

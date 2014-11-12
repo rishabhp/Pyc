@@ -1,26 +1,33 @@
 package com.pycitup.pyc;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.ListPopupWindowCompat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -51,6 +58,7 @@ public class ConversationsActivity extends Activity {
     String mConversationId;
     ArrayList<ParseObject> mChatMessages = new ArrayList<ParseObject>();
     CustomAdapter mChatLogAdapter;
+    boolean mNewMessageSent = false;
 
     Handler mHandler = new Handler();
 
@@ -143,6 +151,7 @@ public class ConversationsActivity extends Activity {
             }
         });
 
+
         final EditText chatMessageField = (EditText) findViewById(R.id.chatMessage);
         Button chatSend = (Button) findViewById(R.id.chatSend);
         chatSend.setOnClickListener(new View.OnClickListener() {
@@ -160,6 +169,7 @@ public class ConversationsActivity extends Activity {
                     @Override
                     public void done(ParseException e) {
                         if (e == null) {
+                            mNewMessageSent = true;
                             chatMessageField.setText("");
                             Toast.makeText(ConversationsActivity.this, "Message sent!", Toast.LENGTH_SHORT).show();
                         }
@@ -175,6 +185,9 @@ public class ConversationsActivity extends Activity {
         // Fetch all the chat messages and show up
         // in the list
         mChatLogList = (ListView) findViewById(R.id.chatLog);
+        mChatLogList.setDivider(null);
+        mChatLogList.setDividerHeight(0);
+
         mChatLogAdapter = new CustomAdapter();
         mChatLogList.setAdapter(mChatLogAdapter);
 
@@ -184,7 +197,33 @@ public class ConversationsActivity extends Activity {
         mLayoutInflator = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         mHandler.postDelayed(runnable, 5000);
+
+
+        final ScrollView scrollView = (ScrollView) findViewById(R.id.scrollView);
+        mChatLogList.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                scrollView.requestDisallowInterceptTouchEvent(true);
+
+                int action = event.getActionMasked();
+
+                switch (action) {
+                    case MotionEvent.ACTION_UP:
+                        scrollView.requestDisallowInterceptTouchEvent(false);
+                        break;
+                }
+
+                return false;
+            }
+        });
     }
+
+    /*@Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "activity onTouchEvent.... lol");
+        //super.onTouchEvent(event);
+        return true;
+    }*/
 
     private Runnable runnable = new Runnable() {
         @Override
@@ -198,8 +237,6 @@ public class ConversationsActivity extends Activity {
         // TODO:
         // Optimization so that when someone types
         // and sends message then
-
-        //mChatMessages.clear();
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatMessage");
         // where conversation ID is this
@@ -216,14 +253,25 @@ public class ConversationsActivity extends Activity {
                     chatMessages.add(chatMessage);
                 }
 
+                // so the takehome is dont touch your adapter data
+                // outside of the main thread, and always call
+                // notifydatasetchanged immediately afterwards
                 runOnUiThread(new Runnable(){
                     public void run() {
                         mChatMessages.clear();
                         mChatMessages.addAll(chatMessages);
                         mChatLogAdapter.notifyDataSetChanged();
+
+                        if (mNewMessageSent) {
+                            //mChatLogList.smoothScrollToPosition( mChatLogAdapter.getCount() - 1 );
+                            mChatLogList.setSelection(mChatLogAdapter.getCount() - 1);
+                            mNewMessageSent = false;
+                        }
+                        else {
+
+                        }
                     }
                 });
-                //mChatLogAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -300,8 +348,44 @@ public class ConversationsActivity extends Activity {
                 view = convertView;
             }
 
-            TextView chatMessage = (TextView) view.findViewById(R.id.chatMessage);
-            chatMessage.setText(mChatMessages.get(position).getString("message"));
+            ParseObject chatMessage = mChatMessages.get(position);
+
+            TextView chatMessageView = (TextView) view.findViewById(R.id.chatMessage);
+            chatMessageView.setText(chatMessage.getString("message"));
+
+            // Convert DP to px
+            int sizeInDp = 50;
+            float scale = getResources().getDisplayMetrics().density;
+            int dpAsPixels = (int) (sizeInDp*scale + 0.5f);
+            int dpAsPixels2 = (int) (5*scale + 0.5f);
+
+            // If sender then show message on the right side
+            if (chatMessage.getString("sender").equals(ParseUser.getCurrentUser().getObjectId())) {
+                // right align text
+                //chatMessageView.setGravity(Gravity.END);
+
+                // set left margin
+                RelativeLayout.LayoutParams llp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                llp.setMargins(dpAsPixels, dpAsPixels2, dpAsPixels2, dpAsPixels2);
+                // right align text
+                llp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                chatMessageView.setLayoutParams(llp);
+
+                chatMessageView.setBackgroundColor(Color.parseColor("#DEEED1"));
+            }
+            else {
+                // left alignt text
+                // chatMessageView.setGravity(Gravity.START);
+
+                // set right margin
+                RelativeLayout.LayoutParams llp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                llp.setMargins(dpAsPixels2, dpAsPixels2, dpAsPixels, dpAsPixels2);
+                // left align text
+                llp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                chatMessageView.setLayoutParams(llp);
+
+                chatMessageView.setBackgroundColor(Color.parseColor("#D6CDC4"));
+            }
 
             return view;
         }

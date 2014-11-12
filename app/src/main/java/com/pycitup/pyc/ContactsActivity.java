@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -423,6 +424,12 @@ public class ContactsActivity extends Activity {
         }
     }
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d(ContactsActivity.class.getSimpleName(), "Activity touchevent");
+        return super.onTouchEvent(event);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

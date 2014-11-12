@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceScreen
+        android:key="button_voicemail_category_key"
+        android:title="Voicemail"
+        android:persistent="false">
+    <PreferenceCategory
+        android:title="Background Updating">
+        <CheckBoxPreference
+            android:summary="Summary Background Update Flag"
+            android:title="Title Background Update Flag"
+            android:key="Key Flag Background Update" />
+
+        <EditTextPreference
+            android:summary="hello"
+            android:title="world"
+            android:key="url" />
+    </PreferenceCategory>
+        </PreferenceScreen>
+
+
+</PreferenceScreen>

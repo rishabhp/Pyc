@@ -9,9 +9,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.TextView;
+
+import com.pubnub.api.Callback;
+import com.pubnub.api.Pubnub;
 
 import org.w3c.dom.Text;
 

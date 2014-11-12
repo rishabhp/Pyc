@@ -1,11 +1,21 @@
 package com.pycitup.pyc;
 
 import android.app.Activity;
+import android.app.LoaderManager;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.Loader;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -17,89 +27,72 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.ViewFlipper;
 import android.widget.ViewSwitcher;
 
+import org.xmlpull.v1.XmlPullParser;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
-public class GestureActivity extends Activity {
-
-    CustomPagerAdapter mCustomPagerAdapter;
-    GestureDetector mGestureDetector;
-
-    int[] mResources = {
-            R.drawable.first,
-            R.drawable.second,
-            R.drawable.third,
-            R.drawable.fourth,
-            R.drawable.fifth,
-            R.drawable.sixth
-    };
+public class GestureActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private String TAG = GestureActivity.class.getSimpleName();
 
-    HomePagerAdapter mHomePagerAdapter;
-    ViewPager mViewPager;
+    //SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gesture);
 
-        mCustomPagerAdapter = new CustomPagerAdapter(this);
+        //Intent intent = new Intent(this, ListPreferencesActivity.class);
+        //startActivity(intent);
 
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mCustomPagerAdapter);
+        // Database Store (sqlite)
 
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                Log.d(TAG, "Page position: " + position);
-            }
-        });
+        TestDatabase testDatabase = new TestDatabase(this);
+        SQLiteDatabase db = testDatabase.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TestDatabase.COL_TITLE, "test title");
+        values.put(TestDatabase.COL_URL, "http://google.com");
+        long insertId = db.insert(TestDatabase.TABLE_TUTORIALS, null, values);
+
+        Log.d(TAG, String.valueOf(insertId));
     }
 
+    public static String readableFileSize(long size) {
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+    }
 
-    class CustomPagerAdapter extends PagerAdapter {
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return null;
+    }
 
-        Context mContext;
-        LayoutInflater mLayoutInflater;
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        public CustomPagerAdapter(Context context) {
-            mContext = context;
-            mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        }
+    }
 
-        @Override
-        public int getCount() {
-            return mResources.length;
-        }
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
 
-        @Override
-        public boolean isViewFromObject(View view, Object object) {
-            return view == ((LinearLayout) object);
-        }
-
-        @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-            Log.d(TAG, "instantiateItem " + position);
-
-            View itemView = mLayoutInflater.inflate(R.layout.conversation_pager_item, container, false);
-
-            ImageView imageView = (ImageView) itemView.findViewById(R.id.imageView);
-            imageView.setImageResource(mResources[position]);
-
-            container.addView(itemView);
-
-            return itemView;
-        }
-
-        @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            Log.d(TAG, "destroyItem " + position);
-
-            container.removeView((LinearLayout) object);
-        }
     }
 
     @Override
@@ -120,4 +113,5 @@ public class GestureActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

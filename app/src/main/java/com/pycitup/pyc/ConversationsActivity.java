@@ -33,6 +33,7 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.GetDataCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
@@ -41,7 +42,14 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.pubnub.api.Callback;
+import com.pubnub.api.Pubnub;
+import com.pubnub.api.PubnubError;
+import com.pubnub.api.PubnubException;
 import com.pycitup.pyc.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +80,13 @@ public class ConversationsActivity extends Activity {
         // ViewPager
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(new CustomPagerAdapter(this));
+
+        // PubNub Integration
+        final Pubnub pubnub = new Pubnub(
+                PycApplication.PUBNUB_PUB_KEY,
+                PycApplication.PUBNUB_SUB_KEY,
+                PycApplication.PUBNUB_SECRET_KEY
+        );
 
         // Conversation.objectId
         mConversationId = getIntent().getExtras().getString("conversationId");
@@ -158,7 +173,7 @@ public class ConversationsActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Chat button submitted
-                String chatBody = chatMessageField.getText().toString();
+                final String chatBody = chatMessageField.getText().toString();
 
                 final ParseObject chatMessage = new ParseObject("ChatMessage");
                 chatMessage.put("sender", ParseUser.getCurrentUser().getObjectId());
@@ -172,6 +187,25 @@ public class ConversationsActivity extends Activity {
                             mNewMessageSent = true;
                             chatMessageField.setText("");
                             Toast.makeText(ConversationsActivity.this, "Message sent!", Toast.LENGTH_SHORT).show();
+
+                            JSONObject json = new JSONObject();
+                            try {
+                                json.put("chatMessageId", chatMessage.getObjectId());
+                                json.put("conversationId", mConversationId);
+                                json.put("conversationFileId", mCurrentFileId);
+                                json.put("chatMessage", chatBody);
+                            }
+                            catch (JSONException je) {
+                                je.printStackTrace();
+                            }
+
+                            pubnub.publish("conversation_"+mConversationId, json, new Callback() {
+                                @Override
+                                public void successCallback(String channel, Object message) {
+                                    Log.d(TAG, "Publishing done");
+                                }
+                            });
+
                         }
                         else {
 
@@ -196,6 +230,7 @@ public class ConversationsActivity extends Activity {
 
         mLayoutInflator = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
+        // We're handling this with pubnub for now
         mHandler.postDelayed(runnable, 5000);
 
 
@@ -216,18 +251,65 @@ public class ConversationsActivity extends Activity {
                 return false;
             }
         });
-    }
 
-    /*@Override
-    public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "activity onTouchEvent.... lol");
-        //super.onTouchEvent(event);
-        return true;
-    }*/
+
+        try {
+            pubnub.subscribe("conversation_"+mConversationId, new Callback() {
+                @Override
+                public void successCallback(String channel, Object message) {
+                    // message should have
+                    // { conversationId, conversationFileId, chatMessage, senderId, senderName, sentTime }
+
+                    JSONObject msg = (JSONObject) message;
+                    String chatMessageId = msg.optString("chatMessageId");
+                    String conversationId = msg.optString("conversationId");
+                    String conversationFileId = msg.optString("conversationFileId");
+                    String chatMessage = msg.optString("chatMessage");
+
+                    System.out.println("Channel: " + channel + " Message: " + chatMessage);
+
+                    if ( !conversationFileId.equals(mCurrentFileId) ) return;
+
+                    // Get Parse Object
+
+                    ParseQuery<ParseObject> query = ParseQuery.getQuery("ChatMessage");
+                    // where conversation ID is this
+                    //query.whereEqualTo("conversationId", mConversationId);
+                    //query.whereEqualTo("conversationFileId", mCurrentFileId);
+                    query.whereEqualTo("objectId", chatMessageId);
+
+                    query.getFirstInBackground(new GetCallback<ParseObject>() {
+                        @Override
+                        public void done(final ParseObject parseObject, ParseException e) {
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mChatMessages.add(parseObject);
+                                    mChatLogAdapter.notifyDataSetChanged();
+
+                                    if (mNewMessageSent) {
+                                        //mChatLogList.smoothScrollToPosition( mChatLogAdapter.getCount() - 1 );
+                                        mChatLogList.setSelection(mChatLogAdapter.getCount() - 1);
+                                        mNewMessageSent = false;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        } catch (PubnubException e) {
+            e.printStackTrace();
+        }
+    }
 
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
+
+            Log.d(TAG, "Main thread: " + PycApplication.isMainThread());
+
             getChatMessages();
             mHandler.postDelayed(this, 5000);
         }

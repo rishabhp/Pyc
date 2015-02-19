@@ -2,22 +2,76 @@ package com.pycitup.pyc;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.Application;
 import android.app.FragmentTransaction;
+import android.app.LoaderManager;
+import android.app.PendingIntent;
+import android.content.AsyncQueryHandler;
+import android.content.AsyncTaskLoader;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
+import android.content.IntentFilter;
+import android.content.Loader;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.database.ContentObservable;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
+import android.gesture.Gesture;
+import android.net.Uri;
+import android.os.*;
+import android.os.Process;
+import android.provider.UserDictionary;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.util.Property;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import com.parse.ParseUser;
-import com.pubnub.api.Callback;
-import com.pubnub.api.Pubnub;
-import com.pubnub.api.PubnubException;
+import android.widget.ListView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.parse.ParseException;
+import com.parse.ParseInstallation;
+import com.parse.ParsePush;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
+import com.parse.SaveCallback;
+import com.pubnub.api.Callback;
+import com.pubnub.api.PnGcmMessage;
+import com.pubnub.api.PnMessage;
+import com.pubnub.api.Pubnub;
+import com.pubnub.api.PubnubError;
+import com.pubnub.api.PubnubException;
+import com.pycitup.pyc.aidl.IBoundService;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
@@ -27,53 +81,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     HomePagerAdapter mHomePagerAdapter;
     ViewPager mViewPager;
 
-
-    public class User {
-        private int birthYear;
-        private String fullName;
-        public User() {}
-        public User(String fullName, int birthYear) {
-            this.fullName = fullName;
-            this.birthYear = birthYear;
-        }
-        public long getBirthYear() {
-            return birthYear;
-        }
-        public String getFullName() {
-            return fullName;
-        }
-    }
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-        // == pubnub
-
-        Pubnub pubnub = new Pubnub(
-                "pub-c-dbf49973-307a-4b0d-852f-6f5f05446b5e",
-                "sub-c-43fccdc4-6636-11e4-90a5-02ee2ddab7fe",
-                "sec-c-NTlhMWUzMjktZTc2Yy00YzMzLTgzMzctNzlhODVkODJiY2Nh"
-        );
-
-        try {
-            pubnub.subscribe("hello_world", new Callback() {
-                @Override
-                public void successCallback(String channel, Object message) {
-                    System.out.println("SUBSCRIBE: " + channel + " : " + message.getClass() + " : " + message.toString());
-                }
-            });
-        } catch (PubnubException e) {
-            e.printStackTrace();
-        }
-
-
-        // == pubnub
-
-
 
         // Get current user
         ParseUser currentUser = ParseUser.getCurrentUser();
@@ -86,10 +97,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             // The user is logged in, yay!!
             // Log.i(TAG, currentUser.getUsername());
         }
-
-        //startActivity( new Intent(this, ConversationsListActivity.class) );
-        //finish();
-
 
         // Setup the action bar for tabs
         final ActionBar actionBar = getActionBar();

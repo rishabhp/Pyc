@@ -14,5 +14,6 @@
     <string name="title_activity_conversations">ConversationsActivity</string>
     <string name="title_activity_gesture">GestureActivity</string>
     <string name="title_activity_list_preferences">ListPreferencesActivity</string>
+    <string name="title_activity_push">PushActivity</string>
 
 </resources>

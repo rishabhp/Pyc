@@ -15,7 +15,7 @@ import android.text.TextUtils;
  */
 public class TestProvider extends ContentProvider {
 
-    private TestDatabase mDB;
+    private PostDatabase mDB;
 
     private static final String AUTHORITY = "com.pycitup.pyc.TestProvider";
     public static final int TUTORIALS = 100;
@@ -39,19 +39,19 @@ public class TestProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mDB = new TestDatabase(getContext());
+        mDB = new PostDatabase(getContext());
         return true;
     }
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-        queryBuilder.setTables(TestDatabase.TABLE_TUTORIALS);
+        queryBuilder.setTables(PostDatabase.TABLE_POSTS);
 
         int uriType = sURIMatcher.match(uri);
         switch (uriType) {
             case TUTORIAL_ID:
-                queryBuilder.appendWhere(TestDatabase.ID + "="
+                queryBuilder.appendWhere(PostDatabase.ID + "="
                         + uri.getLastPathSegment());
                 break;
             case TUTORIALS:
@@ -84,17 +84,17 @@ public class TestProvider extends ContentProvider {
         int rowsAffected = 0;
         switch (uriType) {
             case TUTORIALS:
-                rowsAffected = sqlDB.delete(TestDatabase.TABLE_TUTORIALS,
+                rowsAffected = sqlDB.delete(PostDatabase.TABLE_POSTS,
                         selection, selectionArgs);
                 break;
             case TUTORIAL_ID:
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
-                    rowsAffected = sqlDB.delete(TestDatabase.TABLE_TUTORIALS,
-                            TestDatabase.ID + "=" + id, null);
+                    rowsAffected = sqlDB.delete(PostDatabase.TABLE_POSTS,
+                            PostDatabase.ID + "=" + id, null);
                 } else {
-                    rowsAffected = sqlDB.delete(TestDatabase.TABLE_TUTORIALS,
-                            selection + " and " + TestDatabase.ID + "=" + id,
+                    rowsAffected = sqlDB.delete(PostDatabase.TABLE_POSTS,
+                            selection + " and " + PostDatabase.ID + "=" + id,
                             selectionArgs);
                 }
                 break;

@@ -28,8 +28,6 @@ public class HomePagerAdapter extends FragmentPagerAdapter {
     // and it does not exists.
     public Fragment getItem(int position) {
 
-        // Log.d(HomePagerAdapter.class.getSimpleName(), String.valueOf(position));
-
         switch (position) {
             case 0:
                 return new ActivityFeedFragment();
